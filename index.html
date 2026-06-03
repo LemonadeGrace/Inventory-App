@@ -331,6 +331,8 @@
                                     <div>
                                         <label>Item Name *</label>
                                         <input
+                                            id="itemName"
+                                            name="itemName"
                                             type="text"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -341,6 +343,8 @@
                                     <div>
                                         <label>Category *</label>
                                         <input
+                                            id="category"
+                                            name="category"
                                             type="text"
                                             value={formData.category}
                                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -352,6 +356,8 @@
                                         <div>
                                             <label>Quantity *</label>
                                             <input
+                                                id="quantity"
+                                                name="quantity"
                                                 type="number"
                                                 value={formData.quantity}
                                                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -362,6 +368,8 @@
                                         <div>
                                             <label>Low Stock Threshold</label>
                                             <input
+                                                id="threshold"
+                                                name="threshold"
                                                 type="number"
                                                 value={formData.lowStockThreshold}
                                                 onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })}
@@ -373,6 +381,8 @@
                                     <div>
                                         <label>Assigned To (Your Name)</label>
                                         <input
+                                            id="assignedTo"
+                                            name="assignedTo"
                                             type="text"
                                             value={formData.assignedTo}
                                             onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
