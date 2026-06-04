@@ -3,250 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rolling Inventory Tracker</title>
+    <title>Inventory Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #e2e8f0;
             min-height: 100vh;
-        }
-        .app {
-            display: flex;
-            height: 100vh;
-        }
-        .sidebar {
-            width: 250px;
-            background: #0f172a;
-            border-right: 1px solid #334155;
             padding: 20px;
-            overflow-y: auto;
         }
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
+        .app { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
-        .nav-item {
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-            background: transparent;
+        .header h1 { font-size: 28px; margin-bottom: 16px; }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .nav-btn {
+            padding: 10px 16px;
             border: none;
-            color: #94a3b8;
-            width: 100%;
-            text-align: left;
-        }
-        .nav-item:hover { background: #1e293b; }
-        .nav-item.active {
-            background: #3b82f6;
+            border-radius: 8px;
+            background: #334155;
             color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: #475569; }
+        .nav-btn.active { background: #3b82f6; }
+        .role-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
         .role-badge {
             padding: 8px 12px;
             border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 20px;
-            text-align: center;
-            background: #1e293b;
-        }
-        .role-badge.manager {
             background: #164e63;
             color: #67e8f9;
+            font-size: 12px;
+            font-weight: 600;
         }
         .role-badge.staff {
             background: #14532d;
             color: #86efac;
         }
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 30px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-        }
-        .header h1 { font-size: 28px; font-weight: 700; }
+        
         .screen { display: none; }
         .screen.active { display: block; }
+        
+        .screen-content {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
         .btn {
             padding: 10px 16px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
             font-weight: 600;
+            font-size: 14px;
             transition: all 0.2s;
         }
         .btn-primary { background: #3b82f6; color: white; }
         .btn-primary:hover { background: #2563eb; }
         .btn-secondary { background: #334155; color: white; }
         .btn-secondary:hover { background: #475569; }
-        .btn-small { padding: 6px 12px; font-size: 12px; }
         .btn-danger { background: #7f1d1d; color: #fecaca; }
         .btn-danger:hover { background: #991b1b; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
         
         .inventory-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
+            margin-top: 20px;
         }
         .item-card {
-            background: #1e293b;
+            background: #0f172a;
             border: 1px solid #334155;
             border-radius: 12px;
             padding: 20px;
-            transition: all 0.2s;
         }
-        .item-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.1);
-        }
-        .item-card.low-stock { border-color: #ef4444; }
+        .item-card.low { border-color: #ef4444; }
         .item-icon { font-size: 32px; margin-bottom: 12px; }
         .item-name { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .item-details { font-size: 13px; color: #cbd5e1; margin-bottom: 12px; }
-        .stock-display { font-size: 24px; font-weight: 700; color: #22c55e; margin-bottom: 4px; }
-        .stock-display.low { color: #ef4444; }
-        .low-stock-warning { font-size: 12px; color: #ef4444; margin-bottom: 16px; font-weight: 600; }
-        .card-actions { display: flex; gap: 8px; }
+        .item-stock { font-size: 24px; font-weight: 700; color: #22c55e; margin-bottom: 12px; }
+        .item-stock.low { color: #ef4444; }
+        .card-actions { display: flex; gap: 8px; margin-top: 12px; }
         .card-actions .btn { flex: 1; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
-        .modal-content { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; width: 90%; max-width: 500px; }
         .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; }
-        .form-input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; font-family: inherit; }
+        .form-input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 14px; }
         .form-input:focus { outline: none; border-color: #3b82f6; }
         .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
         .modal-actions .btn { flex: 1; }
         
-        .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .entry-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
-        .entry-item-name { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-        .entry-field { margin-bottom: 14px; }
+        .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
+        .entry-card { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
         .entry-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
-        .entry-display { background: #0f172a; padding: 10px 12px; border-radius: 6px; font-size: 16px; font-weight: 700; color: #e2e8f0; }
-        .entry-display.auto { background: #164e63; color: #67e8f9; }
-        .entry-input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 16px; font-family: inherit; }
+        .entry-display { background: #164e63; padding: 10px 12px; border-radius: 6px; font-size: 16px; font-weight: 700; color: #67e8f9; margin-bottom: 12px; }
+        .entry-input { width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 16px; margin-bottom: 12px; }
         .entry-input:focus { outline: none; border-color: #3b82f6; }
         
-        .report-section { margin-bottom: 30px; }
-        .report-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #3b82f6; }
-        .report-table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-        .report-table th { background: #0f172a; padding: 12px; text-align: left; font-weight: 600; font-size: 12px; color: #94a3b8; border-bottom: 1px solid #334155; }
+        .report-table { width: 100%; border-collapse: collapse; background: #0f172a; border-radius: 8px; overflow: hidden; margin-top: 16px; }
+        .report-table th { background: #334155; padding: 12px; text-align: left; font-weight: 600; font-size: 12px; }
         .report-table td { padding: 12px; border-bottom: 1px solid #334155; }
-        .report-table tr:hover { background: #334155; }
         
-        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-        .alert-info { background: #164e63; border: 1px solid #155e75; color: #67e8f9; }
-        .alert-danger { background: #7f1d1d; border: 1px solid #991b1b; color: #fecaca; }
-        
-        .settings-section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .settings-section h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-        .settings-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; }
-        .settings-item-name { font-weight: 600; font-size: 14px; }
-        .settings-item-value { font-size: 12px; color: #94a3b8; }
-        .settings-item-actions { display: flex; gap: 8px; }
-        
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; background: #164e63; border: 1px solid #155e75; color: #67e8f9; }
         .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
         .hidden { display: none !important; }
         
         @media (max-width: 768px) {
-            .app { flex-direction: column; }
-            .sidebar { width: 100%; display: flex; gap: 10px; overflow-x: auto; }
-            .nav-item { margin-bottom: 0; white-space: nowrap; }
             .inventory-grid, .entry-grid { grid-template-columns: 1fr; }
+            .nav-tabs { flex-direction: column; }
+            .role-controls { flex-direction: column; }
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <div class="sidebar">
-            <div class="logo">🍋 Inventory</div>
-            <button class="nav-item active" onclick="switchScreen('inventory')">📦 Inventory</button>
-            <button class="nav-item" onclick="switchScreen('daily')">📝 Daily Entry</button>
-            <button class="nav-item" onclick="switchScreen('reports')">📊 Reports</button>
-            <button class="nav-item" id="settingsNav" onclick="switchScreen('settings')" class="hidden">⚙️ Settings</button>
-            <div class="role-badge" id="roleBadge" style="margin-top: auto;">
-                <div id="roleDisplay">Staff</div>
-                <button class="btn btn-secondary btn-small" onclick="switchRole()" style="margin-top: 8px; width: 100%;">Switch Role</button>
+        <div class="header">
+            <h1>🍋 Inventory Tracker</h1>
+            <div class="nav-tabs">
+                <button class="nav-btn active" onclick="switchTab('inventory')">📦 Inventory</button>
+                <button class="nav-btn" onclick="switchTab('daily')">📝 Daily Entry</button>
+                <button class="nav-btn" onclick="switchTab('reports')">📊 Reports</button>
+                <button class="nav-btn" id="settingsTab" onclick="switchTab('settings')" class="hidden">⚙️ Settings</button>
+            </div>
+            <div class="role-controls">
+                <span class="role-badge" id="roleBadge">Staff</span>
+                <button class="btn btn-secondary btn-small" onclick="toggleRole()">Switch Role</button>
             </div>
         </div>
 
-        <div class="main-content">
-            <div id="inventory" class="screen active">
-                <div class="header">
-                    <h1>📦 Inventory</h1>
-                    <button class="btn btn-primary" id="addItemBtn" onclick="openModal('addItem')" style="display: none;">+ Add Item</button>
+        <!-- INVENTORY -->
+        <div id="inventory" class="screen active">
+            <div class="screen-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Inventory Items</h2>
+                    <button class="btn btn-primary" id="addItemBtn" onclick="openModal()" style="display: none;">+ Add Item</button>
                 </div>
                 <div id="inventoryList" class="inventory-grid"></div>
             </div>
+        </div>
 
-            <div id="daily" class="screen">
-                <div class="header">
-                    <h1>📝 Daily Entry</h1>
-                    <span id="entryDate" style="font-size: 14px; color: #94a3b8;"></span>
-                </div>
-                <div class="alert alert-info">ℹ️ Beginning stock is auto-populated from yesterday's ending. Fill in Added and Ending stock.</div>
+        <!-- DAILY ENTRY -->
+        <div id="daily" class="screen">
+            <div class="screen-content">
+                <h2 id="entryTitle">Daily Entry</h2>
+                <div class="alert">ℹ️ Beginning stock auto-populates from yesterday's ending stock.</div>
                 <div id="entryList" class="entry-grid"></div>
-                <button class="btn btn-primary" id="submitBtn" onclick="submitDailyEntry()" style="margin-top: 20px; display: none;">Submit Daily Entry</button>
+                <button class="btn btn-primary" id="submitBtn" onclick="submitEntry()" style="margin-top: 20px; display: none;">Submit Daily Entry</button>
             </div>
+        </div>
 
-            <div id="reports" class="screen">
-                <div class="header"><h1>📊 Reports</h1></div>
+        <!-- REPORTS -->
+        <div id="reports" class="screen">
+            <div class="screen-content">
+                <h2>Reports</h2>
                 <div id="reportsList"></div>
             </div>
+        </div>
 
-            <div id="settings" class="screen">
-                <div class="header"><h1>⚙️ Settings</h1></div>
-                <div class="settings-section">
-                    <h3>📦 Inventory Items</h3>
-                    <div id="settingsItemsList"></div>
-                    <button class="btn btn-primary btn-small" onclick="openModal('addItem')" style="margin-top: 16px;">+ Add Item</button>
-                </div>
+        <!-- SETTINGS -->
+        <div id="settings" class="screen">
+            <div class="screen-content">
+                <h2>Settings</h2>
+                <div id="settingsList"></div>
             </div>
         </div>
     </div>
 
-    <div id="addItemModal" class="modal">
+    <!-- MODAL -->
+    <div id="modal" class="modal">
         <div class="modal-content">
-            <div class="modal-title" id="itemModalTitle">Add New Item</div>
+            <div class="modal-title" id="modalTitle">Add New Item</div>
             <div class="form-group">
-                <label class="form-label">Item Name *</label>
+                <label class="form-label" for="itemName">Item Name *</label>
                 <input type="text" id="itemName" class="form-input" placeholder="e.g., Lemons">
             </div>
             <div class="form-group">
-                <label class="form-label">Icon/Emoji (optional)</label>
+                <label class="form-label" for="itemIcon">Icon (optional)</label>
                 <input type="text" id="itemIcon" class="form-input" placeholder="🍋" value="📦" maxlength="2">
             </div>
             <div class="form-group">
-                <label class="form-label">Unit *</label>
-                <input type="text" id="itemUnit" class="form-input" placeholder="e.g., pcs, kg, bags">
+                <label class="form-label" for="itemUnit">Unit *</label>
+                <input type="text" id="itemUnit" class="form-input" placeholder="e.g., pcs, kg">
             </div>
             <div class="form-group">
-                <label class="form-label">Current Stock *</label>
+                <label class="form-label" for="itemStock">Current Stock *</label>
                 <input type="number" id="itemStock" class="form-input" placeholder="0" value="0" step="0.1">
             </div>
             <div class="form-group">
-                <label class="form-label">Low Stock Warning *</label>
+                <label class="form-label" for="itemThreshold">Low Stock Threshold *</label>
                 <input type="number" id="itemThreshold" class="form-input" placeholder="10" value="10" step="0.1">
             </div>
             <div class="modal-actions">
@@ -259,83 +228,63 @@
     <script>
         const SUPABASE_URL = 'https://ifkwnqrjzmqkyhmujdmz.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlma3ducXJqem1xa3lobXVqZG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk3NDIsImV4cCI6MjA5NjA5NTc0Mn0.5LJ77LZtKd1LC0yZkoqEQhCzTxQzMEVbiQMQTKT3BZk';
-
+        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        
         let userRole = localStorage.getItem('userRole') || 'staff';
         let items = [];
-        let dailyEntries = [];
-        let editingItemId = null;
-        let todayDate = new Date().toISOString().split('T')[0];
-
-        async function loadData() {
-            try {
-                const { data: itemsData, error: itemsError } = await supabase
-                    .from('inventory_items')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (itemsError) throw itemsError;
-                items = itemsData || [];
-
-                const { data: entriesData, error: entriesError } = await supabase
-                    .from('daily_entries')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (entriesError) throw entriesError;
-                dailyEntries = entriesData || [];
-
-                updateUI();
-                renderInventory();
-                renderDailyEntry();
-                renderReports();
-                renderSettings();
-
-                supabase.channel('inventory_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_items' }, () => { loadData(); })
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_entries' }, () => { loadData(); })
-                    .subscribe();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error connecting: ' + error.message);
-            }
-        }
+        let entries = [];
+        let editingId = null;
+        const today = new Date().toISOString().split('T')[0];
 
         function updateUI() {
-            document.getElementById('roleDisplay').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
-            const roleBadge = document.getElementById('roleBadge');
-            roleBadge.className = 'role-badge ' + (userRole === 'manager' ? 'manager' : 'staff');
-            
             const isManager = userRole === 'manager';
+            document.getElementById('roleBadge').textContent = isManager ? 'Manager' : 'Staff';
+            document.getElementById('roleBadge').className = 'role-badge ' + (isManager ? 'manager' : 'staff');
             document.getElementById('addItemBtn').style.display = isManager ? 'block' : 'none';
-            document.getElementById('settingsNav').classList.toggle('hidden', !isManager);
+            document.getElementById('settingsTab').classList.toggle('hidden', !isManager);
             document.getElementById('submitBtn').style.display = isManager ? 'none' : 'block';
         }
 
-        function switchRole() {
+        function toggleRole() {
             userRole = userRole === 'staff' ? 'manager' : 'staff';
             localStorage.setItem('userRole', userRole);
             updateUI();
         }
 
-        function switchScreen(screenName) {
+        function switchTab(tab) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenName).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
+        }
+
+        async function loadData() {
+            try {
+                const { data: itemsData } = await supabase.from('inventory_items').select('*');
+                const { data: entriesData } = await supabase.from('daily_entries').select('*');
+                
+                items = itemsData || [];
+                entries = entriesData || [];
+                
+                renderInventory();
+                renderDaily();
+                renderReports();
+                renderSettings();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error: ' + error.message);
+            }
         }
 
         function renderInventory() {
             const html = items.filter(i => i.active !== false).map(item => {
                 const isLow = item.current_stock <= item.low_stock_threshold;
                 return `
-                    <div class="item-card ${isLow ? 'low-stock' : ''}">
+                    <div class="item-card ${isLow ? 'low' : ''}">
                         <div class="item-icon">${item.icon || '📦'}</div>
                         <div class="item-name">${item.name}</div>
-                        <div class="item-details">Unit: ${item.unit}</div>
-                        <div class="stock-display ${isLow ? 'low' : ''}">${item.current_stock} ${item.unit}</div>
-                        ${isLow ? `<div class="low-stock-warning">⚠️ Low Stock! (${item.low_stock_threshold})</div>` : ''}
+                        <div class="item-stock ${isLow ? 'low' : ''}">${item.current_stock} ${item.unit}</div>
                         <div class="card-actions">
                             ${userRole === 'manager' ? `
                                 <button class="btn btn-secondary btn-small" onclick="editItem('${item.id}')">Edit</button>
@@ -345,138 +294,146 @@
                     </div>
                 `;
             }).join('');
-            document.getElementById('inventoryList').innerHTML = html || '<div class="empty-state">No items yet</div>';
+            document.getElementById('inventoryList').innerHTML = html || '<div class="empty-state">No items</div>';
         }
 
-        function renderDailyEntry() {
-            const entryDate = new Date(todayDate);
-            document.getElementById('entryDate').textContent = entryDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        function renderDaily() {
+            const entryDate = new Date(today).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('entryTitle').textContent = 'Daily Entry - ' + entryDate;
 
             const html = items.filter(i => i.active !== false).map(item => {
-                const yesterdayEntry = dailyEntries.find(e => 
-                    e.item_id === item.id && 
-                    e.date === getYesterdayDate()
-                );
-                const beginning = yesterdayEntry ? yesterdayEntry.ending : item.current_stock;
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const lastEntry = entries.find(e => e.item_id === item.id && e.date === yesterdayStr);
+                const beginning = lastEntry ? lastEntry.ending : item.current_stock;
                 
                 return `
                     <div class="entry-card">
-                        <div class="entry-item-name">${item.icon || '📦'} ${item.name}</div>
-                        <div class="entry-field">
-                            <div class="entry-label">Beginning</div>
-                            <div class="entry-display auto">${beginning} ${item.unit}</div>
-                        </div>
-                        <div class="entry-field">
-                            <div class="entry-label">Added</div>
-                            <input type="number" class="entry-input" data-item="${item.id}" data-field="added" placeholder="0" value="0" step="0.1">
-                        </div>
-                        <div class="entry-field">
-                            <div class="entry-label">Ending</div>
-                            <input type="number" class="entry-input" data-item="${item.id}" data-field="ending" placeholder="0" value="${beginning}" step="0.1">
-                        </div>
-                        <div class="entry-field">
-                            <div class="entry-label">Used (auto)</div>
-                            <div class="entry-display auto" data-used="${item.id}">0 ${item.unit}</div>
-                        </div>
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">${item.icon || '📦'} ${item.name}</div>
+                        <div class="entry-label">Beginning</div>
+                        <div class="entry-display">${beginning} ${item.unit}</div>
+                        <div class="entry-label">Added</div>
+                        <input type="number" class="entry-input" data-item="${item.id}" data-field="added" placeholder="0" value="0" step="0.1" onchange="calcUsed()">
+                        <div class="entry-label">Ending</div>
+                        <input type="number" class="entry-input" data-item="${item.id}" data-field="ending" placeholder="0" value="${beginning}" step="0.1" onchange="calcUsed()">
+                        <div class="entry-label">Used (auto)</div>
+                        <div class="entry-display" data-used="${item.id}">0 ${item.unit}</div>
                     </div>
                 `;
             }).join('');
             
-            document.getElementById('entryList').innerHTML = html || '<div class="empty-state">No items to enter</div>';
-            document.querySelectorAll('.entry-input').forEach(input => {
-                input.addEventListener('input', calculateUsed);
-            });
+            document.getElementById('entryList').innerHTML = html || '<div class="empty-state">No items</div>';
         }
 
-        function calculateUsed() {
+        function calcUsed() {
             document.querySelectorAll('[data-used]').forEach(elem => {
                 const itemId = elem.getAttribute('data-used');
                 const item = items.find(i => i.id === itemId);
                 const added = parseFloat(document.querySelector(`[data-item="${itemId}"][data-field="added"]`).value) || 0;
                 const ending = parseFloat(document.querySelector(`[data-item="${itemId}"][data-field="ending"]`).value) || 0;
                 
-                const yesterdayEntry = dailyEntries.find(e => e.item_id === itemId && e.date === getYesterdayDate());
-                const beginning = yesterdayEntry ? yesterdayEntry.ending : item.current_stock;
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const lastEntry = entries.find(e => e.item_id === itemId && e.date === yesterdayStr);
+                const beginning = lastEntry ? lastEntry.ending : item.current_stock;
                 
                 const used = beginning + added - ending;
                 elem.textContent = `${used.toFixed(1)} ${item.unit}`;
             });
         }
 
-        async function submitDailyEntry() {
-            if (userRole !== 'staff') {
-                alert('Only staff can submit daily entries');
-                return;
-            }
-
-            let valid = true;
-            const entries = [];
-
-            items.filter(i => i.active !== false).forEach(item => {
+        async function submitEntry() {
+            if (userRole !== 'staff') return alert('Only staff can submit');
+            
+            for (const item of items.filter(i => i.active !== false)) {
                 const added = parseFloat(document.querySelector(`[data-item="${item.id}"][data-field="added"]`).value) || 0;
                 const ending = parseFloat(document.querySelector(`[data-item="${item.id}"][data-field="ending"]`).value) || 0;
                 
-                const yesterdayEntry = dailyEntries.find(e => e.item_id === item.id && e.date === getYesterdayDate());
-                const beginning = yesterdayEntry ? yesterdayEntry.ending : item.current_stock;
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const lastEntry = entries.find(e => e.item_id === item.id && e.date === yesterdayStr);
+                const beginning = lastEntry ? lastEntry.ending : item.current_stock;
                 
                 if (ending > beginning + added) {
-                    alert(`${item.name}: Ending stock cannot exceed Beginning + Added (${beginning + added})`);
-                    valid = false;
-                    return;
+                    return alert(`${item.name}: Ending cannot exceed Beginning + Added`);
                 }
                 
                 const used = beginning + added - ending;
-                entries.push({
-                    date: todayDate,
+                
+                await supabase.from('daily_entries').insert([{
+                    date: today,
                     item_id: item.id,
                     beginning,
                     added,
                     ending,
                     used
-                });
-            });
-
-            if (!valid) return;
-
-            try {
-                for (const entry of entries) {
-                    await supabase.from('daily_entries').insert([entry]);
-                    await supabase.from('inventory_items').update({ current_stock: entry.ending }).eq('id', entry.item_id);
-                }
-                alert('Daily entry submitted!');
-                loadData();
-            } catch (error) {
-                alert('Error: ' + error.message);
+                }]);
+                
+                await supabase.from('inventory_items').update({ current_stock: ending }).eq('id', item.id);
             }
+            
+            alert('Entry submitted!');
+            loadData();
         }
 
-        function openModal(modalId) {
-            if (modalId === 'addItem') {
-                editingItemId = null;
-                document.getElementById('itemModalTitle').textContent = 'Add New Item';
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemIcon').value = '📦';
-                document.getElementById('itemUnit').value = '';
-                document.getElementById('itemStock').value = '0';
-                document.getElementById('itemThreshold').value = '10';
-            }
-            document.getElementById(modalId + 'Modal').classList.add('active');
+        function renderReports() {
+            let html = '<table class="report-table"><thead><tr><th>Date</th><th>Item</th><th>Beginning</th><th>Added</th><th>Ending</th><th>Used</th></tr></thead><tbody>';
+            
+            entries.slice(0, 20).forEach(entry => {
+                const item = items.find(i => i.id === entry.item_id);
+                if (!item) return;
+                const d = new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                html += `<tr><td>${d}</td><td>${item.icon} ${item.name}</td><td>${entry.beginning}</td><td>${entry.added}</td><td>${entry.ending}</td><td><strong>${entry.used}</strong></td></tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('reportsList').innerHTML = html;
+        }
+
+        function renderSettings() {
+            const html = items.map(item => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: 600;">${item.icon} ${item.name}</div>
+                        <div style="font-size: 12px; color: #94a3b8;">Unit: ${item.unit} | Low: ${item.low_stock_threshold}</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary btn-small" onclick="editItem('${item.id}')">Edit</button>
+                        <button class="btn btn-danger btn-small" onclick="archiveItem('${item.id}')">Archive</button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('settingsList').innerHTML = html || '<div class="empty-state">No items</div>';
+        }
+
+        function openModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Item';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemIcon').value = '📦';
+            document.getElementById('itemUnit').value = '';
+            document.getElementById('itemStock').value = '0';
+            document.getElementById('itemThreshold').value = '10';
+            document.getElementById('modal').classList.add('active');
         }
 
         function closeModal() {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            document.getElementById('modal').classList.remove('active');
         }
 
-        function editItem(itemId) {
-            const item = items.find(i => i.id === itemId);
-            editingItemId = itemId;
-            document.getElementById('itemModalTitle').textContent = 'Edit Item';
+        function editItem(id) {
+            const item = items.find(i => i.id === id);
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Item';
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemIcon').value = item.icon || '📦';
             document.getElementById('itemUnit').value = item.unit;
             document.getElementById('itemStock').value = item.current_stock;
             document.getElementById('itemThreshold').value = item.low_stock_threshold;
-            openModal('addItem');
+            openModal();
         }
 
         async function saveItem() {
@@ -486,20 +443,13 @@
             const stock = parseFloat(document.getElementById('itemStock').value);
             const threshold = parseFloat(document.getElementById('itemThreshold').value);
 
-            if (!name || !unit) {
-                alert('Please fill in Name and Unit');
-                return;
-            }
+            if (!name || !unit) return alert('Fill in Name and Unit');
 
             try {
-                if (editingItemId) {
-                    await supabase.from('inventory_items').update({
-                        name, icon, unit, low_stock_threshold: threshold
-                    }).eq('id', editingItemId);
+                if (editingId) {
+                    await supabase.from('inventory_items').update({ name, icon, unit, low_stock_threshold: threshold }).eq('id', editingId);
                 } else {
-                    await supabase.from('inventory_items').insert([{
-                        name, icon, unit, current_stock: stock, low_stock_threshold: threshold, active: true
-                    }]);
+                    await supabase.from('inventory_items').insert([{ name, icon, unit, current_stock: stock, low_stock_threshold: threshold, active: true }]);
                 }
                 closeModal();
                 loadData();
@@ -508,78 +458,18 @@
             }
         }
 
-        async function archiveItem(itemId) {
+        async function archiveItem(id) {
             if (confirm('Archive this item?')) {
-                try {
-                    await supabase.from('inventory_items').update({ active: false }).eq('id', itemId);
-                    loadData();
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                }
+                await supabase.from('inventory_items').update({ active: false }).eq('id', id);
+                loadData();
             }
-        }
-
-        function renderReports() {
-            const lastSevenDays = Array.from({length: 7}, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                return d.toISOString().split('T')[0];
-            }).reverse();
-
-            let html = '<div class="report-section"><div class="report-title">Daily History</div>';
-            html += '<table class="report-table"><thead><tr><th>Date</th><th>Item</th><th>Beginning</th><th>Added</th><th>Ending</th><th>Used</th></tr></thead><tbody>';
-            
-            lastSevenDays.forEach(date => {
-                const dayEntries = dailyEntries.filter(e => e.date === date);
-                dayEntries.forEach(entry => {
-                    const item = items.find(i => i.id === entry.item_id);
-                    const d = new Date(date);
-                    html += `<tr><td>${d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</td><td>${item.icon} ${item.name}</td><td>${entry.beginning}</td><td>${entry.added}</td><td>${entry.ending}</td><td><strong>${entry.used.toFixed(1)}</strong></td></tr>`;
-                });
-            });
-            html += '</tbody></table></div>';
-
-            const lowStockItems = items.filter(i => i.active !== false && i.current_stock <= i.low_stock_threshold);
-            if (lowStockItems.length > 0) {
-                html += '<div class="report-section"><div class="report-title">⚠️ Low Stock Alerts</div>';
-                lowStockItems.forEach(item => {
-                    html += `<div class="alert alert-danger">${item.icon} ${item.name}: ${item.current_stock} ${item.unit} (Warning: ${item.low_stock_threshold})</div>`;
-                });
-                html += '</div>';
-            }
-
-            document.getElementById('reportsList').innerHTML = html;
-        }
-
-        function renderSettings() {
-            const html = items.map(item => `
-                <div class="settings-item">
-                    <div>
-                        <div class="settings-item-name">${item.icon} ${item.name}</div>
-                        <div class="settings-item-value">Unit: ${item.unit} | Low: ${item.low_stock_threshold} | Current: ${item.current_stock}</div>
-                    </div>
-                    <div class="settings-item-actions">
-                        <button class="btn btn-secondary btn-small" onclick="editItem('${item.id}')">Edit</button>
-                        ${item.active !== false ? `<button class="btn btn-danger btn-small" onclick="archiveItem('${item.id}')">Archive</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-            document.getElementById('settingsItemsList').innerHTML = html || '<div class="empty-state">No items</div>';
-        }
-
-        function getYesterdayDate() {
-            const d = new Date(todayDate);
-            d.setDate(d.getDate() - 1);
-            return d.toISOString().split('T')[0];
         }
 
         updateUI();
         loadData();
-
-        window.onclick = function(e) {
-            if (e.target.classList.contains('modal')) {
-                closeModal();
-            }
+        
+        window.onclick = (e) => {
+            if (e.target.id === 'modal') closeModal();
         }
     </script>
 </body>
