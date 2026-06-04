@@ -229,7 +229,7 @@
         const SUPABASE_URL = 'https://ifkwnqrjzmqkyhmujdmz.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlma3ducXJqem1xa3lobXVqZG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk3NDIsImV4cCI6MjA5NjA5NTc0Mn0.5LJ77LZtKd1LC0yZkoqEQhCzTxQzMEVbiQMQTKT3BZk';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let userRole = localStorage.getItem('userRole') || 'staff';
         let items = [];
